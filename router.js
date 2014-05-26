@@ -210,13 +210,13 @@
 	Router.prototype._followRoute = function( fragmentUrl, url, matchedIndexes ) {
 		var index = matchedIndexes.splice(0, 1), 
 			route = this._routes[index], 
-			match = url.match(route.path), 
 			request, 
 			params = {},
 			splat = [];
 		if(!route){
 			return this._throwsRouteError(500, new Error('Internal error'), fragmentUrl);
 		}
+		var match = url.match(route.path);
 		/*Combine path parameter name with params passed if any*/
 		for(var i = 0, len = route.paramNames.length; i < len; i++) {
 			params[route.paramNames[i]] = match[i + 1];
@@ -229,7 +229,7 @@
 			}
 		}
 		/*Build next callback*/
-		var next = (matchedIndexes.length === 0) ? null : (function(uO, u,mI,context){
+		var next = (function(uO, u,mI,context){
 			return function(err, error_code){
 				if(err)	
 					return this._throwsRouteError( error_code || 500, err, fragmentUrl );
@@ -388,11 +388,14 @@
 					      .replace(PATH_EVERY_MATCHER, PATH_EVERY_REPLACER)
 					      .replace(PATH_EVERY_GLOBAL_MATCHER, PATH_EVERY_GLOBAL_REPLACER) + "(?:\\?.+)?$", modifiers);
 		}
-		this._routes.push({
-			'path' : path,
-			'paramNames' : paramNames,
-			'routeAction' : callback
-		});
+		var callbacks = Array.prototype.slice.apply(arguments).slice(1);
+    for(var n = 0 ; n < callbacks.length ; n++) {
+  		this._routes.push({
+  			'path' : path,
+  			'paramNames' : paramNames,
+  			'routeAction' : callbacks[n]
+  		});
+    }
 		return this;
 	};
 	
